@@ -6,19 +6,25 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './auth.entity';
-import { LoginDto, RegisterDto, UserDto } from './auth.dto';
+import { LoginDto, RegisterDto, ResetPasswordDto, UserDto } from './auth.dto';
 import { Repository } from 'typeorm';
 import BaseResponse from 'src/utils/response/base.response';
 import { ResponseSuccess } from 'src/interface';
 import { compare, hash } from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { jwt_config } from 'src/config/jwt.config';
+import { MailService } from '../mail/mail.service';
+import { randomBytes } from 'crypto';
+import { ResetPassword } from './reset_password.entity';
 
 @Injectable()
 export class AuthService extends BaseResponse {
   constructor(
     @InjectRepository(User) private readonly authRepository: Repository<User>,
+    @InjectRepository(ResetPassword)
+    private readonly resetPasswordRepository: Repository<ResetPassword>, // inject repository reset password
     private jwtService: JwtService,
+    private mailService: MailService,
   ) {
     super();
   }
@@ -165,5 +171,72 @@ export class AuthService extends BaseResponse {
       access_token: access_token,
       refresh_token: refresh_token,
     });
+  }
+
+  async forgotPassword(email: string): Promise<ResponseSuccess> {
+    const user = await this.authRepository.findOne({
+      where: {
+        email: email,
+      },
+    });
+    if (!user) {
+      throw new HttpException(
+        'Email tidak ditemukan',
+        HttpStatus.UNPROCESSABLE_ENTITY,
+      );
+    }
+
+    const token = randomBytes(32).toString('hex'); // membuat token
+    const link = `http://localhost:3000/auth/reset-password/${user.id}/${token}`;
+    await this.mailService.sendForgotPassword({
+      email: email,
+      name: user.nama,
+      link: link,
+    });
+
+    const payload = {
+      user: {
+        id: user.id,
+      },
+      token: token,
+    };
+
+    await this.resetPasswordRepository.save(payload);
+    return this._success('silahkan chek email');
+  }
+
+  async resetPassword(
+    user_id: number,
+    token: string,
+    payload: ResetPasswordDto,
+  ): Promise<ResponseSuccess> {
+    const userToken = await this.resetPasswordRepository.findOne({
+      where: {
+        token: token,
+        user: {
+          id: user_id,
+        },
+      },
+    });
+
+    if (!userToken) {
+      throw new HttpException(
+        'Token tidak valid',
+        HttpStatus.UNPROCESSABLE_ENTITY, // jika tidak sah , berikan pesan token tidak valid
+      );
+    }
+
+    payload.new_password = await hash(payload.new_password, 12); // hash password
+    await this.authRepository.save({
+      password: payload.new_password,
+      id: user_id,
+    });
+    await this.resetPasswordRepository.delete({
+      user: {
+        id: user_id,
+      },
+    });
+
+    return this._success('berhasil reset password, silahkan login ulang');
   }
 }

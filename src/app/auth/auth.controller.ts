@@ -1,6 +1,14 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LoginDto, RegisterDto } from './auth.dto';
+import { LoginDto, RegisterDto, ResetPasswordDto } from './auth.dto';
 import { JwtGuard, JwtGuardRefreshToken } from './auth.guard';
 
 @Controller('auth')
@@ -28,6 +36,23 @@ export class AuthController {
   @UseGuards(JwtGuardRefreshToken)
   @Get('refresh-token')
   async refreshToken(@Req() req) {
-    
+    const token = req.headers.authorization.split(' ')[1];
+    const id = req.headers.id;
+    return this.authService.refreshToken(+id, token);
+  }
+
+  @Post('lupa-password')
+  async forgotPassword(@Body('email') email: string) {
+    console.log('email', email);
+    return this.authService.forgotPassword(email);
+  }
+
+  @Post('reset-password/:user_id/:token')
+  async resetPassword(
+    @Param('user_id') user_id: string,
+    @Param('token') token: string,
+    @Body() payload: ResetPasswordDto,
+  ) {
+    return this.authService.resetPassword(+user_id, token, payload);
   }
 }
