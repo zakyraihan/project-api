@@ -44,7 +44,7 @@ export class AuthController {
   @Post('lupa-password')
   async forgotPassword(@Body('email') email: string) {
     console.log('email', email);
-    return this.authService.forgotPassword(email);
+    return this.authService.forgotPassword(email)
   }
 
   @Post('reset-password/:user_id/:token')
