@@ -16,6 +16,7 @@ import { jwt_config } from 'src/config/jwt.config';
 import { MailService } from '../mail/mail.service';
 import { randomBytes } from 'crypto';
 import { ResetPassword } from './reset_password.entity';
+import { Exception } from 'handlebars';
 
 @Injectable()
 export class AuthService extends BaseResponse {
@@ -211,6 +212,7 @@ export class AuthService extends BaseResponse {
     payload: ResetPasswordDto,
   ): Promise<ResponseSuccess> {
     const userToken = await this.resetPasswordRepository.findOne({
+      //cek apakah user_id dan token yang sah pada tabel reset password
       where: {
         token: token,
         user: {
@@ -226,17 +228,19 @@ export class AuthService extends BaseResponse {
       );
     }
 
-    payload.new_password = await hash(payload.new_password, 12); // hash password
+    payload.new_password = await hash(payload.new_password, 12); //hash password
     await this.authRepository.save({
+      // ubah password lama dengan password baru
       password: payload.new_password,
       id: user_id,
     });
     await this.resetPasswordRepository.delete({
+      // hapus semua token pada tabel reset password yang mempunyai user_id yang dikirim, agar tidak bisa digunakan kembali
       user: {
         id: user_id,
       },
     });
 
-    return this._success('berhasil reset password, silahkan login ulang');
+    return this._success('Reset Passwod Berhasil, Silahkan login ulang');
   }
 }

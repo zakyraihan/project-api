@@ -3,6 +3,8 @@ import {
   BaseEntity,
   PrimaryGeneratedColumn,
   Column,
+  ManyToOne,
+  JoinColumn,
   OneToMany,
 } from 'typeorm';
 import { ResetPassword } from './reset_password.entity';
@@ -30,7 +32,7 @@ export class User extends BaseEntity {
   @Column({ nullable: true })
   role: string;
 
-  @OneToMany(() => ResetPassword, (reset) => reset.user)
+  @OneToMany(() => ResetPassword, (reset) => reset.user) // buat relasi one to many dengan tabel reset password
   reset_password: ResetPassword;
 
   @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
