@@ -8,6 +8,8 @@ import { JwtAccessTokenStrategy } from './jwtAccesToken.strategy';
 import { JwtRefreshTokenStrategy } from './jwtRefreshToken.strategy';
 import { ResetPassword } from './reset_password.entity';
 import { MailModule } from '../mail/mail.module';
+import { PassportModule } from '@nestjs/passport';
+import { jwt_config } from 'src/config/jwt.config';
 
 @Module({
   imports: [

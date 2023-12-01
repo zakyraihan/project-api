@@ -13,8 +13,8 @@ export class ResetPassword extends BaseEntity {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @ManyToOne(() => User) // relasikan many to one dengan table user
-  @JoinColumn()
+  @ManyToOne(() => User)  // relasikan many to one dengan table user
+  @JoinColumn({ name: 'user_id' })
   user: User;
 
   @Column({ nullable: true })
