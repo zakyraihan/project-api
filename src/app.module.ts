@@ -3,10 +3,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeOrmConfig } from './config/typeorm.config';
-import { AuthModule } from './app/auth/auth.module';
-import { MailModule } from './app/mail/mail.module';
 import { ConfigModule } from '@nestjs/config';
-import { KategoryModule } from './app/kategory/kategory.module';
+import { ProdukModule } from './app/produk/produk.module';
 
 @Module({
   imports: [
@@ -14,9 +12,7 @@ import { KategoryModule } from './app/kategory/kategory.module';
       isGlobal: true, // konfigurasi is global untuk semua module
     }),
     TypeOrmModule.forRoot(typeOrmConfig),
-    AuthModule,
-    MailModule,
-    KategoryModule,
+    ProdukModule
   ],
   controllers: [AppController],
   providers: [AppService],
